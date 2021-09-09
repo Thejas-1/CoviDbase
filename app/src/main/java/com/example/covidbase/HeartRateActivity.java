@@ -3,16 +3,12 @@ package com.example.covidbase;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
-import android.widget.Button;
 
-public class MainActivity extends AppCompatActivity {
+public class HeartRateActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
-        Button heartRate = (Button) findViewById(R.id.button);
-        
+        setContentView(R.layout.activity_heart_rate);
     }
 }
