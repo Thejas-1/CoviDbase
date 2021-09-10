@@ -7,14 +7,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
-public class HeartRateActivity extends AppCompatActivity {
+public class RespiratoryRate extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_heart_rate);
+        setContentView(R.layout.activity_respiratory_rate);
+        Button goBack = (Button) findViewById(R.id.button8);
 
-        Button goBack = (Button) findViewById(R.id.button6);
         goBack.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -23,4 +23,5 @@ public class HeartRateActivity extends AppCompatActivity {
             }
         });
     }
+
 }

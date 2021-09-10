@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
         Button heartRate = (Button) findViewById(R.id.button2);
+        Button respiratoryRate = (Button) findViewById(R.id.button);
 //        setContentView(R.layout.activity_heart_rate);
 
         heartRate.setOnClickListener(new View.OnClickListener() {
@@ -22,6 +23,14 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 Intent heartRateIntent = new Intent(getApplicationContext(), HeartRateActivity.class);
                 startActivity(heartRateIntent);
+            }
+        });
+
+        respiratoryRate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent respiratoryRateIntent = new Intent(getApplicationContext(),RespiratoryRate.class);
+                startActivity(respiratoryRateIntent);
             }
         });
     }
