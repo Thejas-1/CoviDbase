@@ -9,7 +9,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.CoviDBase">
-        <activity android:name=".RespiratoryRate"></activity>
+        <service
+            android:name=".RespiratoryService"
+            android:enabled="true"
+            android:exported="true"></service>
+
+        <activity android:name=".RespiratoryRate" />
         <activity android:name=".HeartRateActivity" />
         <activity android:name=".MainActivity">
             <intent-filter>
