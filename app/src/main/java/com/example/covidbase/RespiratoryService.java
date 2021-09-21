@@ -3,6 +3,7 @@ package com.example.covidbase;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -45,12 +46,14 @@ public class RespiratoryService extends Service implements SensorEventListener {
             accelValuesY[index] = sensorEvent.values[1];
             accelValuesZ[index] = sensorEvent.values[2];
 
-            if(index >= 127 ){
+            RespiratoryDBHelper dbHelper = new RespiratoryDBHelper(this);
+            SQLiteDatabase db = 
+            /*if(index >= 127 ){
                 index = 0;
                 accelManage.unregisterListener(this);
                 CallFallRecognition();
                 accelManage.registerListener(this,senseAccel, SensorManager.SENSOR_DELAY_NORMAL);
-            }
+            }*/
         }
     }
 

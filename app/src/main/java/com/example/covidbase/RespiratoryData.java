@@ -19,7 +19,7 @@ public class RespiratoryData {
         public static final String ACCEL_READINGS = "VARIATIONS";
     }
 
-    public abstract class RespiratoryDBHelper extends SQLiteOpenHelper {
+   /* public abstract class RespiratoryDBHelper extends SQLiteOpenHelper {
         //Increment version on changing the schema
         public static final int DATABASE_VERSION = 1;
         public static final String DATABASE_NAME = "Respiratory.db";
@@ -36,6 +36,6 @@ public class RespiratoryData {
         public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             onUpgrade(db, oldVersion, newVersion);
         }
-    }
+    }*/
 
 }
