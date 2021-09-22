@@ -10,9 +10,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.CoviDBase">
         <service
-            android:name=".RespiratoryService"
+            android:name=".HeartRateService"
             android:enabled="true"
             android:exported="true"></service>
+        <service
+            android:name=".RespiratoryService"
+            android:enabled="true"
+            android:exported="true" />
 
         <activity android:name=".RespiratoryRate" />
         <activity android:name=".HeartRateActivity" />

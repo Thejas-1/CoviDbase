@@ -22,5 +22,15 @@ public class HeartRateActivity extends AppCompatActivity {
                 startActivity(mainActivity);
             }
         });
+
+        Button measureHearRate = (Button) findViewById(R.id.button5);
+
+        measureHearRate.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent heartRateService = new Intent(getApplicationContext(), HeartRateService.class);
+                startService(heartRateService);
+            }
+        });
     }
 }
