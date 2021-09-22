@@ -1,6 +1,7 @@
 package com.example.covidbase;
 
 import android.app.Service;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
@@ -23,7 +24,10 @@ public class RespiratoryService extends Service implements SensorEventListener {
     float accelValuesZ[] = new float[128];
     int k = 0;
 
-    public void CallFallRecognition(){
+    /*RespiratoryDBHelper dbHelper = new RespiratoryDBHelper(null);
+    SQLiteDatabase db = dbHelper.getWritableDatabase();*/
+
+    /*public void CallFallRecognition(){
         float prev = 0;
         float curr = 0;
         prev = 10;
@@ -35,7 +39,7 @@ public class RespiratoryService extends Service implements SensorEventListener {
                 //sendSMS();
             }
         }
-    }
+    }*/
 
     @Override
     public void onSensorChanged(SensorEvent sensorEvent){
@@ -46,8 +50,17 @@ public class RespiratoryService extends Service implements SensorEventListener {
             accelValuesY[index] = sensorEvent.values[1];
             accelValuesZ[index] = sensorEvent.values[2];
 
-            RespiratoryDBHelper dbHelper = new RespiratoryDBHelper(this);
-            SQLiteDatabase db = 
+            if(index < 127) {
+                RespiratoryDBHelper dbHelper = new RespiratoryDBHelper(RespiratoryService.this);
+                dbHelper.addRecord(Float.toString(accelValuesZ[index]));
+            }
+            //Create a new map of values, where column names are the keys
+           /* ContentValues values = new ContentValues();
+            RespiratoryData.Respiratory res = new RespiratoryData.Respiratory();
+            values.put(res.ACCEL_READINGS, accelValuesZ[index]);
+
+            //Insert the new row, returning the primary key value of the new row
+            long newRowId = db.insert(res.TABLE_NAME, null, values);*/
             /*if(index >= 127 ){
                 index = 0;
                 accelManage.unregisterListener(this);
@@ -74,4 +87,6 @@ public class RespiratoryService extends Service implements SensorEventListener {
         // TODO: Return the communication channel to the service.
         throw new UnsupportedOperationException("Not yet implemented");
     }
+
+
 }
