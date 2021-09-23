@@ -2,11 +2,14 @@ package com.example.covidbase;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.AssetFileDescriptor;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -18,11 +21,13 @@ import android.provider.MediaStore;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.MediaController;
 import android.widget.Toast;
 import android.widget.VideoView;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +48,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     private Uri fileUri;
     private static final int VIDEO_CAPTURE = 101;
+    private String rootPath = Environment.getExternalStorageDirectory().getPath();
 
     @Override
     public void onLocationChanged(Location location) {
@@ -265,13 +271,19 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     public void startRecording()
     {
-        File mediaFile = new
-                File(Environment.getExternalStorageDirectory().getAbsolutePath()
-                + "/Action1.mp4");
+        /*File mediaStorageDir = new File(
+                Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                IMAGE_DIRECTORY_NAME);*/
+        /*File mediaFile = new
+                File(*//*rootPath
+                +*//* Environment
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                "/Pictures");*/
 
 
-
-        /*if (!mediaFile.exists()) {
+        /*if (!mediaFile.exists()
+        ) {
             if (!mediaFile.mkdirs()) {
                 Log.d(IMAGE_DIRECTORY_NAME, "Oops! Failed create "
                         + IMAGE_DIRECTORY_NAME + " directory");
@@ -279,9 +291,18 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         }*/
         Intent intent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT,5);
-        /*fileUri = Uri.fromFile(mediaFile);*/
+        //intent = intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        //intent.putExtra(MediaStore.EXTRA_DURATION_LIMIT,5);
+        //fileUri = Uri.fromFile(MEDIA_TYPE_VIDEO);
+        /*fileUri = Uri.fromFile(mediaFile);
 
+        Uri fileUri = FileProvider.getUriForFile(
+                this,
+                this.getApplicationContext()
+                        .getPackageName() + ".provider", mediaFile);
+        //intent.setDataAndType(fileUri, mimeType);
+        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+*/
         intent.putExtra(MediaStore.EXTRA_OUTPUT, fileUri);
 
         if(intent.resolveActivity(getPackageManager()) != null){
@@ -304,8 +325,56 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == VIDEO_CAPTURE) {
             if (resultCode == RESULT_OK) {
+
+
+
+                try {
+                    AssetFileDescriptor videoAsset = null;
+                    String extStorageState = Environment.getExternalStorageState();
+                    if (Environment.MEDIA_MOUNTED_READ_ONLY.equals(extStorageState)) {
+                        System.out.println("Yes");
+                    }
+
+                    videoAsset = getContentResolver().openAssetFileDescriptor(data.getData(), "r");
+
+                    FileInputStream fis = videoAsset.createInputStream();
+                File root=new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),"/my_folder/");  //you can replace RecordVideo by the specific folder where you want to save the video
+                if (!root.exists()) {
+                    System.out.println("No directory");
+                    root.mkdirs();
+                }
+
+                File file;
+                file=new File(root,"videoFile.mp4" );
+
+                FileOutputStream fos = null;
+
+                    fos = new FileOutputStream(file);
+
+
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = fis.read(buf)) > 0) {
+                    try {
+                        fos.write(buf, 0, len);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                /*fis.close();
+                fos.close();*/
+
+                /*File mediaFile = new
+                        File(*//*rootPath
+                +*//* Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                        "/my_folder/");*/
+
                 Toast.makeText(this, "Video has been saved to:\n" +
-                        data.getData(), Toast.LENGTH_LONG).show();
+                        rootPath.toString(), Toast.LENGTH_LONG).show();
                 /*fileUri = data.getData();
                 VideoView myVidView = new VideoView(this);
                 myVidView.setVideoURI(fileUri);
@@ -329,6 +398,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
     }
 
+    public void storagePermissions(Activity activity) {
+
+        int storagePermission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        int REQUEST_EXTERNAL_STORAGE = 1;
+
+        String[] PERMISSIONS = {
+                Manifest.permission.READ_EXTERNAL_STORAGE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                Manifest.permission.CAMERA
+
+        };
+
+        if (storagePermission != PackageManager.PERMISSION_GRANTED) {
+            Log.i("log", "Read/Write Permissions needed!");
+        }
+
+        ActivityCompat.requestPermissions(
+                activity,
+                PERMISSIONS,
+                REQUEST_EXTERNAL_STORAGE
+        );
+    }
     //@Override
 
     @Override
@@ -366,6 +457,28 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             heartRate.setEnabled(false);
         }
 
+        Button playVideo = (Button) findViewById(R.id.button9);
+
+        playVideo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                VideoView video = (VideoView) findViewById(R.id.videoView);
+
+                MediaController mediaController = new MediaController(MainActivity.this);
+// initiate a video view
+                //VideoView simpleVideoView = (VideoView) findViewById(R.id.video);
+// set media controller object for a video view
+                video.setMediaController(mediaController);
+
+                Uri uri = Uri.parse(String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/my_folder/videoFile.mp4"));
+                video.setVideoURI(Uri.parse(String.valueOf(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/my_folder/videoFile.mp4")));
+                video.setVideoURI(uri);
+                video.start();
+            }
+        });
+
+
+
         heartRate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -396,15 +509,16 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 /*Location location = locationManager.getLastKnownLocation(GPS_PROVIDER);
                 Toast.makeText(getApplicationContext(),"Current Longitute: " + location.getLongitude() + " Current Latitude: " + location.getLatitude(), Toast.LENGTH_LONG).show();*/
 
-                UploadTask up1 = new UploadTask();
+               /* UploadTask up1 = new UploadTask();
                 Toast.makeText(getApplicationContext(),"Starting to Upload",Toast.LENGTH_LONG).show();
-                up1.execute();
+                up1.execute();*/
+                storagePermissions(MainActivity.this);
 
                 startRecording();
 
-                DownloadTask dw1 = new DownloadTask();
+                /*DownloadTask dw1 = new DownloadTask();
                 Toast.makeText(getApplicationContext(),"Running Background Task", Toast.LENGTH_LONG).show();
-                dw1.execute();
+                dw1.execute();*/
             }
         });
 
