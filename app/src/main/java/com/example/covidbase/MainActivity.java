@@ -25,6 +25,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.MediaController;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
 
@@ -32,6 +33,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -42,6 +44,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
+
+
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
@@ -276,15 +280,34 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     }
 
-    public int peakFinding(ArrayList<Integer> data) {
+    public float[] denoise(float[] data, int filter){
 
-        int diff, prev, slope = 0, zeroCrossings = 0;
+        float[] movingAvgArr = new float[231];
+        float movingAvg = 0;
+
+        for(int i=0; i< data.length; i++){
+            movingAvg += data[i];
+            if(i+1 < filter) {
+                continue;
+            }
+            movingAvgArr[i] = ((movingAvg)/filter);
+            movingAvg -= data[i+1 - filter];
+        }
+
+        return movingAvgArr;
+
+    }
+
+    public int peakFinding(float[] data) {
+
+        float diff, prev, slope = 0;
+        int zeroCrossings = 0;
         int j = 0;
-        prev = data.get(0);
+        prev = data[0];
 
         //Get initial slope
-        while(slope == 0 && j + 1 < data.size()){
-            diff = data.get(j + 1) - data.get(j);
+        while(slope == 0 && j + 1 < data.length){
+            diff = data[j + 1] - data[j];
             if(diff != 0){
                 slope = diff/abs(diff);
             }
@@ -292,14 +315,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         }
 
         //Get total number of zero crossings in data curve
-        for(int i = 1; i<data.size(); i++) {
+        for(int i = 1; i<data.length; i++) {
 
-            diff = data.get(i) - prev;
-            prev = data.get(i);
+            diff = data[i] - prev;
+            prev = data[i];
 
             if(diff == 0) continue;
 
-            int currSlope = diff/abs(diff);
+            float currSlope = diff/abs(diff);
 
             if(currSlope == -1* slope){
                 slope *= -1;
@@ -461,13 +484,36 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 REQUEST_EXTERNAL_STORAGE
         );
     }
+
+   /* public void saveToCSV(ArrayList<Integer> data, String path){
+
+        File file = new File(path);
+
+        try {
+            FileWriter outputFile = new FileWriter(file);
+            CSVWriter writer = new CSVWriter(outputFile);
+            String[] header = { "Index", "Data"};
+            writer.writeNext(header);
+            int i = 0;
+            for (int d : data) {
+                String dataRow[] = {i + "", d + ""};
+                writer.writeNext(dataRow);
+                i++;
+            }
+            writer.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }*/
     //@Override
     public class BreathingRateDetector implements Runnable{
 
-        public float breathingRate;
-        ArrayList<Integer> accelValuesX;
+        public int breathingRate;
+        float[] accelValuesX;
 
-        BreathingRateDetector(ArrayList<Integer> accelValuesX){
+        BreathingRateDetector(float[] accelValuesX){
             this.accelValuesX = accelValuesX;
         }
 
@@ -478,14 +524,17 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             //saveToCSV(accelValuesX, csvFilePath);
 
             //Noise reduction from Accelerometer X values
-            //ArrayList<Integer> accelValuesXDenoised = denoise(accelValuesX, 10);
+            float[] accelValuesXDenoised = denoise(accelValuesX, 10);
 
-            csvFilePath = rootPath + "/x_values_denoised.csv";
+            //csvFilePath = rootPath + "/x_values_denoised.csv";
             //saveToCSV(accelValuesXDenoised, csvFilePath);
 
             //Peak detection algorithm running on denoised Accelerometer X values
-            //int  zeroCrossings = peakFinding(accelValuesXDenoised);
-            //breathingRate = (zeroCrossings*60)/90;
+            int  zeroCrossings = peakFinding(accelValuesXDenoised);
+            Log.i("log", "Respiratory rate" + breathingRate);
+            breathingRate = (zeroCrossings*60)/90;
+            TextView breatRate = (TextView) findViewById(R.id.textView);
+            breatRate.setText(String.valueOf(breathingRate));
             Log.i("log", "Respiratory rate" + breathingRate);
         }
 
@@ -495,6 +544,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        /*TextView breatRate = (TextView) findViewById(R.id.textView);
+        breatRate.setText(0);*/
 
         setContentView(R.layout.activity_main);
         Button heartRate = (Button) findViewById(R.id.button2);
@@ -617,7 +668,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 Bundle b = intent.getExtras();
                // finalAccelReadings = intent.getStringExtra("finalAccelReadings");
                 System.out.println("accelValuesX "+(-5.3753*100));
-                BreathingRateDetector runnable = new BreathingRateDetector(b.getIntegerArrayList("finalAccelReadings"));
+                BreathingRateDetector runnable = new BreathingRateDetector(b.getFloatArray("finalAccelReadings"));
 
                 Thread thread = new Thread(runnable);
                 thread.start();

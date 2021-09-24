@@ -8,15 +8,15 @@
 
     <Button
         android:id="@+id/button"
-        android:layout_width="240dp"
-        android:layout_height="42dp"
+        android:layout_width="223dp"
+        android:layout_height="39dp"
         android:text="Measure Respiratory Rate"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.526"
+        app:layout_constraintHorizontal_bias="0.107"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.65" />
+        app:layout_constraintVertical_bias="0.636" />
 
     <Button
         android:id="@+id/button2"
@@ -87,4 +87,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.575" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="78dp"
+        android:layout_height="34dp"
+        android:text="0"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.888"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.638" />
 </androidx.constraintlayout.widget.ConstraintLayout>
