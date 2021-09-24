@@ -550,6 +550,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         setContentView(R.layout.activity_main);
         Button heartRate = (Button) findViewById(R.id.button2);
         Button respiratoryRate = (Button) findViewById(R.id.button);
+
+        Button upload = (Button) findViewById(R.id.upload);
+        upload.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                
+            }
+        });
 //        setContentView(R.layout.activity_heart_rate);
         /*if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
@@ -597,7 +605,14 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             }
         });
 
-
+        Button symptomScreenNav = (Button) findViewById(R.id.button3);
+        symptomScreenNav.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), SymptomActivity.class);
+                startActivity(intent);
+            }
+        });
 
         heartRate.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -687,5 +702,39 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 System.gc();
             }
         },  new IntentFilter("SendingAccelReadings"));
+
+        LocalBroadcastManager.getInstance(MainActivity.this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                /*System.out.println("Intent Values: "+intent.getExtras());
+                Bundle b = intent.getExtras();
+                // finalAccelReadings = intent.getStringExtra("finalAccelReadings");
+                System.out.println("accelValuesX "+(-5.3753*100));
+                BreathingRateDetector runnable = new BreathingRateDetector(b.getFloatArray("finalAccelReadings"));
+
+                Thread thread = new Thread(runnable);
+                thread.start();
+
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                //breathingRateTextView.setText(runnable.breathingRate + "");
+
+                *//*Toast.makeText(HomeScreen.this, "Respiratory rate calculated!", Toast.LENGTH_SHORT).show();
+                ongoingBreathingRateProcess = false;*//*
+                b.clear();
+                System.gc();*/
+                Bundle b = intent.getExtras();
+                System.out.println(b.getString("feverRatingValue"));
+                TextView fevVal = (TextView) findViewById(R.id.FeverValue);
+                fevVal.setText(b.getString("feverRatingValue"));
+                System.out.println(fevVal.getText());
+                b.clear();
+                System.gc();
+            }
+        },  new IntentFilter("SendingSymptomRatings"));
     }
 }
