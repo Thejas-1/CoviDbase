@@ -3,11 +3,14 @@ package com.example.covidbase;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.FileProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.res.AssetFileDescriptor;
 import android.location.Location;
@@ -38,17 +41,21 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.ArrayList;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSocketFactory;
 
+import static java.lang.Math.abs;
+
 public class MainActivity extends AppCompatActivity implements LocationListener {
 
     private Uri fileUri;
     private static final int VIDEO_CAPTURE = 101;
     private String rootPath = Environment.getExternalStorageDirectory().getPath();
+    private Boolean breathRateFlag = false;
 
     @Override
     public void onLocationChanged(Location location) {
@@ -269,6 +276,40 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
 
     }
 
+    public int peakFinding(ArrayList<Integer> data) {
+
+        int diff, prev, slope = 0, zeroCrossings = 0;
+        int j = 0;
+        prev = data.get(0);
+
+        //Get initial slope
+        while(slope == 0 && j + 1 < data.size()){
+            diff = data.get(j + 1) - data.get(j);
+            if(diff != 0){
+                slope = diff/abs(diff);
+            }
+            j++;
+        }
+
+        //Get total number of zero crossings in data curve
+        for(int i = 1; i<data.size(); i++) {
+
+            diff = data.get(i) - prev;
+            prev = data.get(i);
+
+            if(diff == 0) continue;
+
+            int currSlope = diff/abs(diff);
+
+            if(currSlope == -1* slope){
+                slope *= -1;
+                zeroCrossings++;
+            }
+        }
+
+        return zeroCrossings;
+    }
+
     public void startRecording()
     {
         /*File mediaStorageDir = new File(
@@ -421,6 +462,34 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         );
     }
     //@Override
+    public class BreathingRateDetector implements Runnable{
+
+        public float breathingRate;
+        ArrayList<Integer> accelValuesX;
+
+        BreathingRateDetector(ArrayList<Integer> accelValuesX){
+            this.accelValuesX = accelValuesX;
+        }
+
+        @Override
+        public void run() {
+
+            String csvFilePath = rootPath + "/x_values.csv";
+            //saveToCSV(accelValuesX, csvFilePath);
+
+            //Noise reduction from Accelerometer X values
+            //ArrayList<Integer> accelValuesXDenoised = denoise(accelValuesX, 10);
+
+            csvFilePath = rootPath + "/x_values_denoised.csv";
+            //saveToCSV(accelValuesXDenoised, csvFilePath);
+
+            //Peak detection algorithm running on denoised Accelerometer X values
+            //int  zeroCrossings = peakFinding(accelValuesXDenoised);
+            //breathingRate = (zeroCrossings*60)/90;
+            Log.i("log", "Respiratory rate" + breathingRate);
+        }
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -526,9 +595,46 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
         respiratoryRate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent respiratoryRateIntent = new Intent(getApplicationContext(),RespiratoryRate.class);
-                startActivity(respiratoryRateIntent);
+                if(breathRateFlag == false) {
+                    Toast.makeText(MainActivity.this, "Place the phone on your chest to measure the breathing",Toast.LENGTH_LONG).show();
+                    breathRateFlag = true;
+                    Intent accelIntent = new Intent(getApplicationContext(), RespiratoryService.class);
+                /*Bundle b = new Bundle();
+                b.putString("phone","14807915874");
+                accelIntent.putExtras(b);*/
+                    startService(accelIntent);
+                }
+                else {
+                    Toast.makeText(MainActivity.this, "There's an ongoing background process for breathing rate!",Toast.LENGTH_LONG).show();
+                }
             }
         });
+
+        LocalBroadcastManager.getInstance(MainActivity.this).registerReceiver(new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                System.out.println("Intent Values: "+intent.getExtras());
+                Bundle b = intent.getExtras();
+               // finalAccelReadings = intent.getStringExtra("finalAccelReadings");
+                System.out.println("accelValuesX "+(-5.3753*100));
+                BreathingRateDetector runnable = new BreathingRateDetector(b.getIntegerArrayList("finalAccelReadings"));
+
+                Thread thread = new Thread(runnable);
+                thread.start();
+
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                //breathingRateTextView.setText(runnable.breathingRate + "");
+
+                /*Toast.makeText(HomeScreen.this, "Respiratory rate calculated!", Toast.LENGTH_SHORT).show();
+                ongoingBreathingRateProcess = false;*/
+                b.clear();
+                System.gc();
+            }
+        },  new IntentFilter("SendingAccelReadings"));
     }
 }

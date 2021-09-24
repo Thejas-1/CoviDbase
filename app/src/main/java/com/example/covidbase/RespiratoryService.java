@@ -9,8 +9,11 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Bundle;
 import android.os.IBinder;
 import android.widget.Toast;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 public class RespiratoryService extends Service implements SensorEventListener {
     public RespiratoryService() {
@@ -19,9 +22,10 @@ public class RespiratoryService extends Service implements SensorEventListener {
     public Sensor senseAccel;
 
     int index = 0;
-    float accelValuesX[] = new float[128];
-    float accelValuesY[] = new float[128];
-    float accelValuesZ[] = new float[128];
+    float accelValuesX[] = new float[231];
+    float accelValuesY[] = new float[231];
+    float accelValuesZ[] = new float[231];
+    float finalAccelReadings[] = new float[231];
     int k = 0;
 
     /*RespiratoryDBHelper dbHelper = new RespiratoryDBHelper(null);
@@ -41,18 +45,41 @@ public class RespiratoryService extends Service implements SensorEventListener {
         }
     }*/
 
+    public float findLargestElement(float a,float b,float c){
+        float largest = 0;
+        if(a >= b){
+            if(a >= c) {
+                largest = a;
+            }
+            else {
+                largest = c;
+            }
+        }
+        else if(b >= c){
+            largest = b;
+        }
+        else{
+            largest = c;
+        }
+
+        return largest;
+    }
+
     @Override
     public void onSensorChanged(SensorEvent sensorEvent){
         Sensor mySensor = sensorEvent.sensor;
         if(mySensor.getType() == Sensor.TYPE_ACCELEROMETER){
-            index++;
-            accelValuesX[index] = sensorEvent.values[0];
-            accelValuesY[index] = sensorEvent.values[1];
-            accelValuesZ[index] = sensorEvent.values[2];
 
-            if(index < 127) {
-                RespiratoryDBHelper dbHelper = new RespiratoryDBHelper(RespiratoryService.this);
-                dbHelper.addRecord(Float.toString(accelValuesZ[index]));
+            accelValuesX[index] = sensorEvent.values[0] * 100;
+            accelValuesY[index] = sensorEvent.values[1] * 100;
+            accelValuesZ[index] = sensorEvent.values[2] * 100;
+            finalAccelReadings[index] = findLargestElement(accelValuesX[index],accelValuesY[index],accelValuesZ[index]);
+            index++;
+
+            if(index >= 230) {
+                /*RespiratoryDBHelper dbHelper = new RespiratoryDBHelper(RespiratoryService.this);
+                dbHelper.addRecord(Float.toString(accelValuesZ[index]));*/
+                stopSelf();
             }
             //Create a new map of values, where column names are the keys
            /* ContentValues values = new ContentValues();
@@ -88,5 +115,25 @@ public class RespiratoryService extends Service implements SensorEventListener {
         throw new UnsupportedOperationException("Not yet implemented");
     }
 
+    @Override
+    public void onDestroy() {
+        try {
+            Thread thread;
+            thread = new Thread((Runnable) () -> {
+                accelManage.unregisterListener(RespiratoryService.this);
 
+                Intent intent = new Intent("SendingAccelReadings");
+
+
+                Bundle b = new Bundle();
+                b.putFloatArray("finalAccelReadings", finalAccelReadings);
+                intent.putExtras(b);
+                LocalBroadcastManager.getInstance(RespiratoryService.this).sendBroadcast(intent);
+            });
+            thread.start();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }
