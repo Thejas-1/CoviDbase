@@ -44,7 +44,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
-
+import java.util.HashMap;
+import java.util.Map;
 
 
 import javax.net.ssl.HostnameVerifier;
@@ -60,6 +61,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
     private static final int VIDEO_CAPTURE = 101;
     private String rootPath = Environment.getExternalStorageDirectory().getPath();
     private Boolean breathRateFlag = false;
+    private int breathingRateValue = 0;
 
     @Override
     public void onLocationChanged(Location location) {
@@ -535,6 +537,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             breathingRate = (zeroCrossings*60)/90;
             TextView breatRate = (TextView) findViewById(R.id.textView);
             breatRate.setText(String.valueOf(breathingRate));
+            breathingRateValue = breathingRate;
             Log.i("log", "Respiratory rate" + breathingRate);
         }
 
@@ -610,6 +613,9 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(getApplicationContext(), SymptomActivity.class);
+                Bundle b = new Bundle();
+                b.putString("BreathRate",String.valueOf(breathingRateValue));
+                intent.putExtras(b);
                 startActivity(intent);
             }
         });
@@ -729,9 +735,24 @@ public class MainActivity extends AppCompatActivity implements LocationListener 
                 System.gc();*/
                 Bundle b = intent.getExtras();
                 System.out.println(b.getString("feverRatingValue"));
-                TextView fevVal = (TextView) findViewById(R.id.FeverValue);
-                fevVal.setText(b.getString("feverRatingValue"));
-                System.out.println(fevVal.getText());
+                Map dataMap = new HashMap();
+                dataMap.put("BREATH_RATE",b.getString("breathingRateValue"));
+                dataMap.put("NAUSEA",b.getString("Nausea"));
+                dataMap.put("HEADACHE",b.getString("Headache"));
+                dataMap.put("DIARRHEA",b.getString("Diarrhea"));
+                dataMap.put("SOAR",b.getString("Soar"));
+                dataMap.put("FEVER",b.getString("Fever"));
+                dataMap.put("MUSCLE",b.getString("Muscle"));
+                dataMap.put("LOSS",b.getString("Loss"));
+                dataMap.put("COUGH",b.getString("Cough"));
+                dataMap.put("BREATH",b.getString("Breath"));
+                dataMap.put("TIREDNESS",b.getString("Tiredness"));
+                RespiratoryDBHelper dbHelper = new RespiratoryDBHelper(MainActivity.this);
+                dbHelper.addRecord(dataMap);
+                //b.getString()
+                /*TextView fevVal = (TextView) findViewById(R.id.FeverValue);
+                fevVal.setText(b.getString("Fever"));*/
+                //System.out.println(fevVal.getText());
                 b.clear();
                 System.gc();
             }
